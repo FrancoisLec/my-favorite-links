@@ -6,7 +6,7 @@ A lightweight Chrome extension to **save, organize, tag and search** your favori
 
 ## Features
 
-- **Quick save popup**: one click (or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Y</kbd>) saves the current page with a folder and tags.
+- **Quick popup**: the ★ button (or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Y</kbd>) opens a search of your links. Click **+ Add link** to save the current page with a folder, tags and ★ favorite.
 - **Right-click to save**: right-click any page or link and choose *Save to My Favorite Links*.
 - **Folders**: create, rename, delete, and drag tiles between folders.
 - **Tags and search**: tag links, filter by one or more tags, and search instantly by title, URL, folder or tag. Press <kbd>/</kbd> to search.
@@ -36,13 +36,14 @@ Chrome keeps your links under this ID, so an update never creates a "new" extens
 
 Your links stay even if you move the folder. In that case, click **Remove** and then **Load unpacked** from the new location.
 Never change or delete the `"key"` line in `manifest.json`, because it is what keeps the ID permanent.
-Using **⬇ Export backup** from time to time is still a good idea.
+Using **⬇ Export** from time to time is still a good idea.
 
 ## Usage
 
 | Action | How |
 |---|---|
-| Save or update current page | ★ button or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Y</kbd> |
+| Save current page | ★ button or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Y</kbd> → **+ Add link** → **Save** |
+| Edit or remove current page | ★ button → **✎ Edit this link** → **Update** / **Remove** |
 | Save a link without opening it | Right-click the link → *Save link to My Favorite Links* |
 | Open the full manager | Popup → **Open all ↗** (or right-click the ★ icon → *Options*) |
 | Search | Type in the search box (press <kbd>/</kbd> in the manager) |
@@ -50,7 +51,7 @@ Using **⬇ Export backup** from time to time is still a good idea.
 | Edit or delete a link | Hover a tile → ✎ |
 | Add or remove a favorite | Click ☆/★ on a card or row, or drag it onto *★ Favorites* |
 | Switch between cards and list | Toolbar → **▦ Cards** / **☰ List** |
-| Back up or restore links | Manager sidebar → **⬇ Export backup** / **⬆ Import backup** |
+| Back up or restore links | Manager sidebar → **⬇ Export** / **⬆ Import** |
 | About and support | Popup → ⓘ, or the manager sidebar → *About & support* |
 
 ## Project structure

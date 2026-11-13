@@ -29,13 +29,13 @@ Open `chrome://extensions` and click **↻ reload** on the My Favorite Links car
 **I updated or moved the extension and my links are gone**
 Since version 1.0.2, the extension ID is permanent (`pbjnbclfppjfmhgjphdjgjommfhckcmp`), so this should not happen.
 Check in `chrome://extensions` (Developer mode on) that the card shows this ID. With an older version, export your
-links from the old card (**⬇ Export backup**) and import them into the new one (**⬆ Import backup**).
+links from the old card (**⬇ Export**) and import them into the new one (**⬆ Import**).
 
 **My links don't appear on my other computer**
 1. On both computers, Chrome must be signed in to the same Google account with sync on, and *Extensions* must be
    included in *Manage what you sync*.
 2. The extension must show the same ID on both computers in `chrome://extensions`: `pbjnbclfppjfmhgjphdjgjommfhckcmp`.
-3. Sync can take a few minutes. If needed, use **⬇ Export backup** on one computer and **⬆ Import backup** on the other.
+3. Sync can take a few minutes. If needed, use **⬇ Export** on one computer and **⬆ Import** on the other.
 
 **"Could not save" / "Not saved" message**
 Chrome Sync space (~100 KB) is full. Delete links you don't need, or export a backup.
