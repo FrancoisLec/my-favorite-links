@@ -16,6 +16,12 @@
       <input id="newCatName" placeholder="New folder">
       <button class="btn small" type="submit">Add</button>
     </form>
+    <div class="backup">
+      <button id="exportBtn" class="btn small" type="button">⬇ Export backup</button>
+      <button id="importBtn" class="btn small" type="button">⬆ Import backup</button>
+      <input id="importFile" type="file" accept=".json,application/json" hidden>
+      <p id="backupStatus" class="tip"></p>
+    </div>
     <p class="tip">Tip: drag a tile onto a folder to move it.</p>
     <a class="about-link" href="about.html">ⓘ About &amp; support</a>
   </aside>

@@ -1,10 +1,11 @@
 {
   "manifest_version": 3,
   "name": "My Favorite Links",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Save, organize, tag and search your favorite links.",
   "author": "Francois Lecompte",
   "homepage_url": "https://github.com/FrancoisLec/my-favorite-links",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArABIHd7NKY9hp+s3DZNzlgduPE1o+xG07LQvvZuCcta54ZETRcY3I0zb3tMqIm0P0OPEtYwvVwTrB4iYoZPTK5KLvovV8bek+eh46PML1ENjNWJ4MsvVHpU79qLlIyQ1sgAqBZB+r1pveQkA2hd1TNgBZiuGviXpB/xBsd5uMu6jpdpYUv4EBfdyIcvwqILd1lxd672kKrBUDjhq/c2fUgvct9+avx3VUmHrYvDjIOmxb2r30A4Bf6H1/Zn99/ktstTQj6Ep44LIiMjzNq8NPXWVj5+XTiYTuwAN0fTwWGJj/ELjcUO3VrWduBBqM9loXb6zHow6NwuUKOzQJhMtBQIDAQAB",
   "permissions": ["storage", "activeTab", "contextMenus", "favicon"],
   "action": {
     "default_popup": "popup.html",

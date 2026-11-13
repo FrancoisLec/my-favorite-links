@@ -26,6 +26,11 @@ Icons come from Chrome's own cache. Visit the site once and the icon will appear
 **My changes to the code don't show up**
 Open `chrome://extensions` and click **↻ reload** on the My Favorite Links card, then reopen the popup.
 
+**I updated or moved the extension and my links are gone**
+Since version 1.0.2, the extension ID is permanent (`pbjnbclfppjfmhgjphdjgjommfhckcmp`), so this should not happen.
+Check in `chrome://extensions` (Developer mode on) that the card shows this ID. With an older version, export your
+links from the old card (**⬇ Export backup**) and import them into the new one (**⬆ Import backup**).
+
 **Where are my links stored?**
 In `chrome.storage.local`, inside your Chrome profile on this computer. They are not uploaded anywhere.
-Removing the extension deletes them.
+Removing the extension deletes them, so export a backup first.

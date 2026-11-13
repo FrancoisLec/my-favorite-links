@@ -252,4 +252,51 @@ document.addEventListener("keydown", e => {
   }
 });
 
+// ---------- backup: export / import ----------
+$("exportBtn").addEventListener("click", async () => {
+  const { links = [], categories = [] } = await chrome.storage.local.get(["links", "categories"]);
+  const backup = {
+    app: "my-favorite-links",
+    version: chrome.runtime.getManifest().version,
+    exported: new Date().toISOString(),
+    categories, links
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+  const a = el("a", { href: URL.createObjectURL(blob), download: `my-favorite-links-backup-${new Date().toISOString().slice(0, 10)}.json` });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  $("backupStatus").textContent = `Exported ${links.length} link(s).`;
+});
+
+$("importBtn").addEventListener("click", () => $("importFile").click());
+$("importFile").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  try {
+    const backup = JSON.parse(await file.text());
+    if (!Array.isArray(backup.links)) throw new Error("no links found");
+    const ids = new Set(data.links.map(l => l.id));
+    const urls = new Set(data.links.map(l => l.url));
+    let added = 0;
+    for (const c of backup.categories || []) ensureCategory(data, c);
+    for (const l of backup.links) {
+      if (!l || !l.url || urls.has(l.url)) continue;
+      const link = {
+        id: ids.has(l.id) || !l.id ? crypto.randomUUID() : l.id,
+        url: l.url,
+        title: l.title || domainOf(l.url),
+        category: ensureCategory(data, l.category),
+        tags: Array.isArray(l.tags) ? l.tags : [],
+        created: l.created || Date.now()
+      };
+      data.links.push(link); ids.add(link.id); urls.add(link.url); added++;
+    }
+    await persist();
+    $("backupStatus").textContent = `Imported ${added} new link(s)` + (backup.links.length - added ? `, skipped ${backup.links.length - added} already here.` : ".");
+  } catch (err) {
+    $("backupStatus").textContent = "Import failed: " + err.message;
+  }
+});
+
 reload();

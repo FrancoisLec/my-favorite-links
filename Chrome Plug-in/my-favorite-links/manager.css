@@ -101,3 +101,6 @@ dialog h3 { margin: 0 0 14px; font-size: 16px; }
   aside { width: auto; height: auto; position: static; border-right: 0; border-bottom: 1px solid var(--border); }
   main { padding: 14px 16px 30px; }
 }
+
+.backup { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 2px 0; }
+.backup .tip { margin: 2px 4px 0; width: 100%; }

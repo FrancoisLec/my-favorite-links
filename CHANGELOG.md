@@ -7,6 +7,15 @@ and this project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-11-13
+
+### Changed
+- The extension now has a **permanent ID** (`pbjnbclfppjfmhgjphdjgjommfhckcmp`), set by a `key` in `manifest.json`.
+  Updating the files, moving the folder or reinstalling no longer creates a "new" extension, so your links are kept.
+
+### Added
+- **Export / Import backup** buttons in the manager sidebar.
+
 ## [1.0.1] - 2026-11-13
 
 First tracked release.
@@ -32,5 +41,6 @@ First tracked release.
 - URLs typed without `https://` are now accepted, and the prefix is added automatically.
 - The folder list no longer shows only the currently selected folder.
 
-[Unreleased]: https://github.com/FrancoisLec/my-favorite-links/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/FrancoisLec/my-favorite-links/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/FrancoisLec/my-favorite-links/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/FrancoisLec/my-favorite-links/releases/tag/v1.0.1

@@ -2,7 +2,7 @@
 
 A lightweight Chrome extension to **save, organize, tag and search** your favorite web links.
 
-![version](https://img.shields.io/badge/version-1.0.1-blue) ![manifest](https://img.shields.io/badge/Chrome-Manifest%20V3-brightgreen) ![license](https://img.shields.io/badge/license-MIT-lightgrey)
+![version](https://img.shields.io/badge/version-1.0.2-blue) ![manifest](https://img.shields.io/badge/Chrome-Manifest%20V3-brightgreen) ![license](https://img.shields.io/badge/license-MIT-lightgrey)
 
 ## Features
 
@@ -11,6 +11,7 @@ A lightweight Chrome extension to **save, organize, tag and search** your favori
 - **Folders**: create, rename, delete, and drag tiles between folders.
 - **Tags and search**: tag links, filter by one or more tags, and search instantly by title, URL, folder or tag. Press <kbd>/</kbd> to search.
 - **Tile grid**: a visual start page that shows each site's icon.
+- **Backup**: export all links to a JSON file and import them back, for example on another computer.
 - **Light and dark mode**: follows your system theme.
 - **Private**: your links stay in your own Chrome profile and nothing is sent anywhere.
 
@@ -22,7 +23,17 @@ A lightweight Chrome extension to **save, organize, tag and search** your favori
 4. Click **Load unpacked** and select the folder **`Chrome Plug-in/my-favorite-links`**, the one that contains `manifest.json`.
 5. Pin the ★ icon from the puzzle-piece menu.
 
-To update, pull or replace the files, then click **↻ reload** on the extension card in `chrome://extensions`.
+## Updating (your links are kept)
+
+The extension has a **permanent ID**: `pbjnbclfppjfmhgjphdjgjommfhckcmp`.
+Chrome keeps your links under this ID, so an update never creates a "new" extension.
+
+1. Get the new files: `git pull`, or replace the files in the same folder.
+2. In `chrome://extensions`, click **↻ reload** on the My Favorite Links card.
+
+Your links stay even if you move the folder. In that case, click **Remove** and then **Load unpacked** from the new location.
+Never change or delete the `"key"` line in `manifest.json`, because it is what keeps the ID permanent.
+Using **⬇ Export backup** from time to time is still a good idea.
 
 ## Usage
 
@@ -34,6 +45,7 @@ To update, pull or replace the files, then click **↻ reload** on the extension
 | Search | Type in the search box (press <kbd>/</kbd> in the manager) |
 | Move a link to another folder | Drag its tile onto the folder in the sidebar |
 | Edit or delete a link | Hover a tile → ✎ |
+| Back up or restore links | Manager sidebar → **⬇ Export backup** / **⬆ Import backup** |
 | About and support | Popup → ⓘ, or the manager sidebar → *About & support* |
 
 ## Project structure
