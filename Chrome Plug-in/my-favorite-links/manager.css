@@ -1,0 +1,103 @@
+body { display: flex; min-height: 100vh; }
+
+aside {
+  width: 230px; flex: none;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 18px 12px;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+aside h1 { font-size: 17px; margin: 0 6px 16px; }
+.star { color: var(--star); }
+
+nav .cat {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 8px; border-radius: 8px;
+  cursor: pointer; user-select: none;
+}
+nav .cat:hover { background: var(--surface-2); }
+nav .cat.active { background: var(--accent-soft); font-weight: 600; }
+nav .cat.drop { outline: 2px dashed var(--accent); outline-offset: -2px; }
+nav .cat .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+nav .cat .count { color: var(--muted); font-size: 12px; }
+nav .cat .edit {
+  visibility: hidden; border: 0; background: none; color: var(--muted);
+  cursor: pointer; padding: 0 2px;
+}
+nav .cat:hover .edit { visibility: visible; }
+nav .sep { border-top: 1px solid var(--border); margin: 8px 4px; }
+
+.addcat { display: flex; gap: 6px; margin-top: 12px; }
+.addcat input { padding: 4px 8px; font-size: 13px; }
+.tip { color: var(--muted); font-size: 11px; margin: 14px 6px 0; }
+.about-link { display: inline-block; margin: 18px 6px 0; font-size: 12px; color: var(--muted); text-decoration: none; }
+.about-link:hover { color: var(--accent); }
+
+main { flex: 1; min-width: 0; padding: 18px 24px 40px; }
+
+.toolbar { display: flex; gap: 8px; align-items: center; max-width: 900px; }
+.toolbar input { flex: 1; padding: 9px 12px; }
+select.btn { padding: 8px 10px; }
+
+.tagbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
+h2 { font-size: 13px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin: 18px 0 10px; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+.tile {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: transform .08s ease, border-color .08s ease;
+}
+.tile:hover { transform: translateY(-2px); border-color: var(--accent); }
+.tile.dragging { opacity: .4; }
+.tile a {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 18px 10px 8px; color: var(--text); text-decoration: none;
+}
+.tile .icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: var(--surface-2);
+  display: grid; place-items: center; margin-bottom: 10px;
+}
+.tile .icon img { width: 32px; height: 32px; }
+.tile .t-title {
+  font-weight: 600; width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tile .t-domain { color: var(--muted); font-size: 12px; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile .t-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 0 8px 12px; min-height: 8px; }
+.tile .t-edit {
+  position: absolute; top: 6px; right: 6px;
+  border: 0; border-radius: 6px; background: var(--surface-2); color: var(--muted);
+  width: 26px; height: 26px; cursor: pointer; opacity: 0;
+}
+.tile:hover .t-edit, .tile .t-edit:focus { opacity: 1; }
+.tile .t-edit:hover { color: var(--text); }
+.tile .t-cat { position: absolute; top: 8px; left: 10px; font-size: 10px; color: var(--muted); }
+
+.empty { color: var(--muted); margin-top: 40px; text-align: center; }
+
+dialog {
+  border: 1px solid var(--border); border-radius: 12px;
+  background: var(--surface); color: var(--text);
+  width: min(420px, 92vw); padding: 18px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.25);
+}
+dialog::backdrop { background: rgba(0,0,0,.35); }
+dialog h3 { margin: 0 0 14px; font-size: 16px; }
+.dlg-actions { margin-top: 14px; }
+.spacer { flex: 1; }
+.small { font-size: 12px; color: var(--muted); }
+
+@media (max-width: 700px) {
+  body { flex-direction: column; }
+  aside { width: auto; height: auto; position: static; border-right: 0; border-bottom: 1px solid var(--border); }
+  main { padding: 14px 16px 30px; }
+}

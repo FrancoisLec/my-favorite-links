@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About — My Favorite Links</title>
+  <link rel="icon" href="icons/icon32.png">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    body { display: flex; justify-content: center; padding: 48px 16px; }
+    .card {
+      width: min(560px, 100%);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; box-shadow: var(--shadow); padding: 28px;
+    }
+    .head { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+    .head img { width: 56px; height: 56px; }
+    h1 { margin: 0; font-size: 22px; }
+    .version { color: var(--muted); font-size: 13px; }
+    h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 22px 0 8px; }
+    p { margin: 0 0 8px; }
+    dl { display: grid; grid-template-columns: 110px 1fr; gap: 6px 12px; margin: 0; }
+    dt { color: var(--muted); }
+    dd { margin: 0; }
+    a { color: var(--accent); }
+    ul { margin: 0; padding-left: 18px; }
+    li { margin-bottom: 4px; }
+    kbd { border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; font-size: 12px; background: var(--surface-2); }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 22px; }
+    .actions a { text-decoration: none; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="head">
+      <img src="icons/icon128.png" alt="">
+      <div>
+        <h1>My Favorite Links</h1>
+        <div class="version">Version <span id="version"></span></div>
+      </div>
+    </div>
+
+    <p>Save, organize, tag and search your favorite web links — right from Chrome.</p>
+
+    <h2>Quick help</h2>
+    <ul>
+      <li><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Y</kbd> or the ★ button: save the current page or search your links.</li>
+      <li>Right-click any page or link → <em>Save to My Favorite Links</em>.</li>
+      <li>In the manager, press <kbd>/</kbd> to search and drag a tile onto a folder to move it.</li>
+    </ul>
+
+    <h2>Support &amp; contact</h2>
+    <dl>
+      <dt>Author</dt><dd>Francois Lecompte</dd>
+      <dt>Email</dt><dd><a href="mailto:lecomptefr@gmail.com?subject=My%20Favorite%20Links%20support">lecomptefr@gmail.com</a></dd>
+      <dt>Project</dt><dd><a href="https://github.com/FrancoisLec/my-favorite-links" target="_blank" rel="noopener">github.com/FrancoisLec/my-favorite-links</a></dd>
+      <dt>License</dt><dd>MIT</dd>
+    </dl>
+
+    <h2>Privacy</h2>
+    <p>Your links are stored only in your own Chrome profile. Nothing is sent to any server.</p>
+
+    <div class="actions">
+      <a class="btn primary" id="mailBtn" href="mailto:lecomptefr@gmail.com?subject=My%20Favorite%20Links%20support">Contact support</a>
+      <a class="btn" href="https://github.com/FrancoisLec/my-favorite-links/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a>
+      <a class="btn" href="https://github.com/FrancoisLec/my-favorite-links/issues" target="_blank" rel="noopener">Report a problem</a>
+      <a class="btn ghost" href="manager.html">← Back to my links</a>
+    </div>
+  </main>
+  <script src="about.js"></script>
+</body>
+</html>

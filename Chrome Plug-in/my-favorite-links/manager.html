@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Favorite Links</title>
+  <link rel="icon" href="icons/icon32.png">
+  <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="manager.css">
+</head>
+<body>
+  <aside>
+    <h1><span class="star">★</span> My Favorite Links</h1>
+    <nav id="cats"></nav>
+    <form id="addCatForm" class="addcat" autocomplete="off">
+      <input id="newCatName" placeholder="New folder">
+      <button class="btn small" type="submit">Add</button>
+    </form>
+    <p class="tip">Tip: drag a tile onto a folder to move it.</p>
+    <a class="about-link" href="about.html">ⓘ About &amp; support</a>
+  </aside>
+
+  <main>
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="Search title, URL, tag…   ( / )">
+      <select id="sort" class="btn" title="Sort">
+        <option value="new">Newest</option>
+        <option value="az">A → Z</option>
+        <option value="domain">Domain</option>
+      </select>
+      <button id="addLink" class="btn primary">+ Add link</button>
+    </div>
+    <div id="tagBar" class="tagbar"></div>
+    <h2 id="heading"></h2>
+    <div id="grid" class="grid"></div>
+    <p id="empty" class="empty" hidden></p>
+  </main>
+
+  <!-- Add / edit link -->
+  <dialog id="editDlg">
+    <form id="editForm" autocomplete="off">
+      <h3 id="editTitle">Edit link</h3>
+      <label>Title <input id="eTitle"></label>
+      <label>URL <input id="eUrl" inputmode="url" spellcheck="false" required></label>
+      <label>Folder
+        <select id="eCategory" class="field"></select>
+        <input id="eNewFolder" class="new-folder" placeholder="New folder name" hidden>
+      </label>
+      <label>Tags <span class="hint">(comma separated)</span> <input id="eTags"></label>
+      <div class="row dlg-actions">
+        <button type="button" id="eDelete" class="btn danger">Delete</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn" data-close>Cancel</button>
+        <button type="submit" class="btn primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Rename / delete folder -->
+  <dialog id="catDlg">
+    <form id="catForm" autocomplete="off">
+      <h3>Folder</h3>
+      <label>Name <input id="cName" required></label>
+      <p id="cInfo" class="hint small"></p>
+      <div class="row dlg-actions">
+        <button type="button" id="cDelete" class="btn danger">Delete</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn" data-close>Cancel</button>
+        <button type="submit" class="btn primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <datalist id="catList"></datalist>
+  <script type="module" src="manager.js"></script>
+</body>
+</html>

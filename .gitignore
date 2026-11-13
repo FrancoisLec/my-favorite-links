@@ -1,0 +1,16 @@
+# Build output
+dist/
+*.zip
+*.crx
+*.pem
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
+
+# Node (if tooling is added later)
+node_modules/
