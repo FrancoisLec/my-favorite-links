@@ -1,4 +1,4 @@
-import { loadData, saveData, newLink } from "./store.js";
+import { loadData, saveData, newLink, defaultFolder } from "./store.js";
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.removeAll(() => {
@@ -18,7 +18,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     flashBadge("=", "#6b7280");
     return;
   }
-  data.links.unshift(newLink({ url, title, category: data.categories[0] }));
+  data.links.unshift(newLink({ url, title, category: defaultFolder(data) }));
   await saveData(data);
   flashBadge("✓", "#16a34a");
 });

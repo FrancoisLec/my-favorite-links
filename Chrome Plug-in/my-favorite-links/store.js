@@ -1,28 +1,112 @@
 // Shared data layer for popup, manager and background.
-// Data lives in chrome.storage.local:
-//   links:      [{ id, url, title, category, tags: [], created }]
-//   categories: ["General", ...]
+//
+// Data lives in chrome.storage.sync, so it follows the user to every computer
+// where they are signed in to Chrome with sync on (same extension ID thanks to
+// the "key" in manifest.json). Sync storage limits: ~100 KB total, 8 KB per item,
+// 512 items — so each link is stored as its own small item:
+//   "folders"   → ["General", "Xerox", ...]
+//   "l:<id>"    → { u: url, t: title, c: folder, g: [tags], d: created, f: 1 if favorite }
+//
+// In memory (what popup/manager use) the shape is unchanged:
+//   { links: [{ id, url, title, category, tags, created, fav }], categories: [...] }
+// Folders and links are kept in alphabetical order.
 
 export const DEFAULT_CATEGORY = "General";
+const LINK_PREFIX = "l:";
+export const SYNC_QUOTA = chrome.storage.sync.QUOTA_BYTES || 102400;
+
+// Alphabetical, ignoring case and accents ("école" next to "Ecole"), numbers in natural order.
+export const byName = (a, b) => String(a).localeCompare(String(b), undefined, { sensitivity: "base", numeric: true });
+export const byTitle = (a, b) => byName(a.title, b.title) || byName(a.url, b.url);
 
 export async function loadData() {
-  const { links = [], categories = [] } = await chrome.storage.local.get(["links", "categories"]);
-  return { links, categories: categories.length ? categories : [DEFAULT_CATEGORY] };
+  await migrateLocalToSync();
+  return readSync();
 }
 
+async function readSync() {
+  const all = await chrome.storage.sync.get(null);
+  const links = [];
+  for (const [k, v] of Object.entries(all)) {
+    if (!k.startsWith(LINK_PREFIX) || !v) continue;
+    links.push({
+      id: k.slice(LINK_PREFIX.length),
+      url: v.u, title: v.t || "", category: v.c || DEFAULT_CATEGORY,
+      tags: Array.isArray(v.g) ? v.g : [], created: v.d || 0, fav: !!v.f
+    });
+  }
+  links.sort(byTitle);
+  loadedIds = new Set(links.map(l => l.id));
+  const categories = Array.isArray(all.folders) && all.folders.length ? [...all.folders] : [DEFAULT_CATEGORY];
+  for (const l of links) if (!categories.includes(l.category)) categories.push(l.category);
+  categories.sort(byName);
+  return { links, categories };
+}
+
+// Ids this page saw at its last load. Only these can be deleted by saveData,
+// so a link just added on another computer is never wiped by a stale page.
+let loadedIds = new Set();
+
+// Writes only what changed and removes links this page deleted.
 export async function saveData({ links, categories }) {
-  await chrome.storage.local.set({ links, categories });
+  const current = await chrome.storage.sync.get(null);
+  const toSet = {};
+  const ids = new Set(links.map(l => l.id));
+  categories = [...categories].sort(byName);
+  if (JSON.stringify(current.folders) !== JSON.stringify(categories)) toSet.folders = categories;
+  for (const l of links) {
+    const key = LINK_PREFIX + l.id;
+    const item = { u: l.url, t: l.title, c: l.category, g: l.tags, d: l.created };
+    if (l.fav) item.f = 1;
+    if (JSON.stringify(current[key]) !== JSON.stringify(item)) toSet[key] = item;
+  }
+  const toRemove = [...loadedIds].filter(id => !ids.has(id)).map(id => LINK_PREFIX + id);
+  if (Object.keys(toSet).length) await chrome.storage.sync.set(toSet);
+  if (toRemove.length) await chrome.storage.sync.remove(toRemove);
+  loadedIds = ids;
 }
 
-export function newLink({ url, title, category = DEFAULT_CATEGORY, tags = [] }) {
+export async function bytesInUse() {
+  return chrome.storage.sync.getBytesInUse(null);
+}
+
+// One-time move of links saved by versions ≤ 1.0.2 (chrome.storage.local).
+// The old local copy is kept as a backup; links already in sync (same URL) are skipped.
+let migration = null;
+function migrateLocalToSync() {
+  migration ??= (async () => {
+    const local = await chrome.storage.local.get(["links", "categories", "migratedToSync"]);
+    if (local.migratedToSync || !Array.isArray(local.links) || !local.links.length) return;
+    const data = await readSync();
+    const urls = new Set(data.links.map(l => l.url));
+    for (const c of local.categories || []) if (!data.categories.includes(c)) data.categories.push(c);
+    for (const l of local.links) {
+      if (!l?.url || urls.has(l.url)) continue;
+      data.links.push({ ...l, id: l.id || crypto.randomUUID(), tags: l.tags || [], created: l.created || Date.now(), fav: !!l.fav });
+      urls.add(l.url);
+      if (!data.categories.includes(l.category)) data.categories.push(l.category);
+    }
+    await saveData(data);
+    await chrome.storage.local.set({ migratedToSync: true });
+  })().catch(err => { migration = null; throw err; });
+  return migration;
+}
+
+export function newLink({ url, title, category = DEFAULT_CATEGORY, tags = [], fav = false }) {
   return {
     id: crypto.randomUUID(),
     url,
     title: (title || "").trim() || domainOf(url),
     category,
     tags,
-    created: Date.now()
+    created: Date.now(),
+    fav
   };
+}
+
+// Folder used when none is chosen: "General" if it exists, else the first one.
+export function defaultFolder(data) {
+  return data.categories.includes(DEFAULT_CATEGORY) ? DEFAULT_CATEGORY : data.categories[0] || DEFAULT_CATEGORY;
 }
 
 export function ensureCategory(data, name) {
@@ -30,6 +114,7 @@ export function ensureCategory(data, name) {
   const found = data.categories.find(c => c.toLowerCase() === clean.toLowerCase());
   if (found) return found;
   data.categories.push(clean);
+  data.categories.sort(byName);
   return clean;
 }
 

@@ -1,7 +1,7 @@
 import {
   loadData, saveData, newLink, ensureCategory, parseTags,
   domainOf, isValidUrl, matches, faviconUrl, el,
-  setupFolderPicker, readFolderPicker
+  setupFolderPicker, readFolderPicker, defaultFolder
 } from "./store.js";
 
 const $ = id => document.getElementById(id);
@@ -17,11 +17,25 @@ async function init() {
   $("url").value = existing?.url ?? url;
   $("title").value = existing?.title ?? tab?.title ?? "";
   $("tags").value = existing ? existing.tags.join(", ") : "";
-  fillCategories(existing?.category ?? data.categories[0]);
+  $("fav").checked = !!existing?.fav;
+  fillCategories(existing?.category ?? defaultFolder(data));
   setMode();
 
   renderResults();
-  (existing ? $("search") : $("tags")).focus();
+  $("search").focus();
+}
+
+// The add/edit form is hidden until "+ Add link" (or "✎ Edit this link") is clicked.
+function showForm(show) {
+  $("saveForm").hidden = !show;
+  $("addBar").hidden = show;
+  $("formMsg").textContent = "";
+  if (show) {
+    status("");
+    ($("title").value ? $("tags") : $("title")).focus();
+  } else {
+    $("search").focus();
+  }
 }
 
 function fillCategories(selected) {
@@ -31,26 +45,41 @@ function fillCategories(selected) {
 function setMode() {
   $("saveBtn").textContent = existing ? "Update" : "Save";
   $("removeBtn").hidden = !existing;
-  status(existing ? "Already in your favorites" : "");
+  $("addToggle").textContent = existing ? "✎ Edit this link" : "+ Add link";
+  status(existing ? (existing.fav ? "★ Saved in Favorites" : "✓ This page is saved") : "");
 }
+
+$("addToggle").addEventListener("click", () => showForm(true));
+$("cancelBtn").addEventListener("click", () => showForm(false));
+$("saveForm").addEventListener("keydown", e => {
+  if (e.key === "Escape") { e.preventDefault(); showForm(false); }
+});
 
 function status(msg) { $("status").textContent = msg; }
 
 $("saveForm").addEventListener("submit", async e => {
   e.preventDefault();
   const url = $("url").value.trim();
-  if (!isValidUrl(url)) { status("Invalid URL"); return; }
+  if (!isValidUrl(url)) { $("formMsg").textContent = "Invalid URL"; return; }
 
   const category = ensureCategory(data, readFolderPicker($("category"), $("newFolder")));
-  const fields = { url, title: $("title").value.trim() || domainOf(url), category, tags: parseTags($("tags").value) };
+  const fields = { url, title: $("title").value.trim() || domainOf(url), category, tags: parseTags($("tags").value), fav: $("fav").checked };
 
+  const isNew = !existing;
   if (existing) Object.assign(existing, fields);
   else {
     existing = newLink(fields);
     data.links.unshift(existing);
   }
-  await saveData(data);
+  try {
+    await saveData(data);
+  } catch (err) {
+    if (isNew) { data.links.shift(); existing = null; }
+    $("formMsg").textContent = "Not saved: " + err.message;
+    return;
+  }
   fillCategories(category);
+  showForm(false);
   setMode();
   status("Saved ✓");
   renderResults();
@@ -61,6 +90,7 @@ $("removeBtn").addEventListener("click", async () => {
   data.links = data.links.filter(l => l.id !== existing.id);
   existing = null;
   await saveData(data);
+  showForm(false);
   setMode();
   status("Removed");
   renderResults();
@@ -86,7 +116,9 @@ $("search").addEventListener("keydown", e => {
 
 function renderResults() {
   const q = $("search").value;
-  const list = data.links.filter(l => matches(l, q)).slice(0, 12);
+  // Favorites first, then the rest; both already in alphabetical order.
+  const found = data.links.filter(l => matches(l, q));
+  const list = [...found.filter(l => l.fav), ...found.filter(l => !l.fav)].slice(0, 12);
   const items = list.map(l => el("li", {},
     el("a", {
       href: l.url,
@@ -95,11 +127,12 @@ function renderResults() {
     },
       el("img", { class: "fav", src: faviconUrl(l.url, 32), alt: "" }),
       el("span", { class: "r-title" }, l.title),
+      l.fav && el("span", { class: "r-star", title: "Favorite" }, "★"),
       el("span", { class: "r-domain" }, domainOf(l.url))
     )
   ));
   $("results").replaceChildren(...(items.length ? items
-    : [el("li", { class: "empty" }, data.links.length ? "No match." : "No favorites yet — save this page above.")]));
+    : [el("li", { class: "empty" }, data.links.length ? "No match." : "No links yet — save this page above.")]));
 }
 
 init();

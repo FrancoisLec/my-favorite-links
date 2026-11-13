@@ -1,11 +1,19 @@
 import {
   loadData, saveData, newLink, ensureCategory, parseTags,
   domainOf, isValidUrl, matches, faviconUrl, el, DEFAULT_CATEGORY,
-  setupFolderPicker, readFolderPicker
+  setupFolderPicker, readFolderPicker, bytesInUse, SYNC_QUOTA, byName, byTitle
 } from "./store.js";
 
 const $ = id => document.getElementById(id);
 const ALL = "__all__";
+const FAV = "__fav__";
+
+// Per-computer display preferences (card/list view).
+const pref = {
+  get(k, d) { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} }
+};
+let view = pref.get("view", "cards");
 
 let data = { links: [], categories: [] };
 let currentCat = ALL;
@@ -16,15 +24,29 @@ let editingCat = null;   // category being renamed
 // ---------- data ----------
 async function reload() {
   data = await loadData();
-  if (currentCat !== ALL && !data.categories.includes(currentCat)) currentCat = ALL;
+  if (currentCat !== ALL && currentCat !== FAV && !data.categories.includes(currentCat)) currentCat = ALL;
   render();
+  showUsage();
 }
 async function persist() {
-  await saveData(data);
+  try {
+    await saveData(data);
+    $("backupStatus").textContent = "";
+  } catch (err) {
+    // Usually the ~100 KB Chrome Sync limit.
+    $("backupStatus").textContent = "Could not save: " + err.message;
+    await reload();
+    return;
+  }
   render();
+  showUsage();
 }
-// Re-render when the popup or context menu saves something.
-chrome.storage.onChanged.addListener((_, area) => { if (area === "local") reload(); });
+async function showUsage() {
+  const used = await bytesInUse();
+  $("syncInfo").textContent = `Synced with your Chrome account · ${Math.ceil(used / 1024)} KB of ${Math.round(SYNC_QUOTA / 1024)} KB used`;
+}
+// Re-render when the popup, the right-click menu or another computer changes something.
+chrome.storage.onChanged.addListener((_, area) => { if (area === "sync") reload(); });
 
 // ---------- rendering ----------
 function render() {
@@ -37,9 +59,9 @@ function renderCats() {
   const counts = {};
   for (const l of data.links) counts[l.category] = (counts[l.category] || 0) + 1;
 
-  const item = (key, label, count, editable) => {
+  const item = (key, label, count, editable, extra = "") => {
     const row = el("div", {
-      class: "cat" + (currentCat === key ? " active" : ""),
+      class: "cat" + (currentCat === key ? " active" : "") + extra,
       onclick: () => { currentCat = key; selectedTags.clear(); render(); }
     },
       el("span", { class: "name" }, label),
@@ -53,22 +75,27 @@ function renderCats() {
     return row;
   };
 
+  const favRow = item(FAV, "Favorites", data.links.filter(l => l.fav).length, false, " favorites");
+  addFavDropTarget(favRow);
   $("cats").replaceChildren(
+    favRow,
     item(ALL, "All links", data.links.length, false),
     el("div", { class: "sep" }),
-    ...data.categories.map(c => item(c, c, counts[c] || 0, true))
+    ...[...data.categories].sort(byName).map(c => item(c, c, counts[c] || 0, true))
   );
 }
 
 function linksInView() {
-  return currentCat === ALL ? data.links : data.links.filter(l => l.category === currentCat);
+  if (currentCat === ALL) return data.links;
+  if (currentCat === FAV) return data.links.filter(l => l.fav);
+  return data.links.filter(l => l.category === currentCat);
 }
 
 function renderTags() {
   const counts = new Map();
   for (const l of linksInView()) for (const t of l.tags) counts.set(t, (counts.get(t) || 0) + 1);
   for (const t of selectedTags) if (!counts.has(t)) selectedTags.delete(t);
-  const tags = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const tags = [...counts].sort((a, b) => byName(a[0], b[0]));
   $("tagBar").replaceChildren(...tags.map(([t, n]) =>
     el("button", { class: "chip" + (selectedTags.has(t) ? " on" : ""), onclick: () => toggleTag(t) },
       "#" + t, el("span", { class: "count" }, n))
@@ -87,19 +114,25 @@ function renderGrid() {
     .filter(l => [...selectedTags].every(t => l.tags.includes(t)));
 
   const sort = $("sort").value;
-  if (sort === "az") list = [...list].sort((a, b) => a.title.localeCompare(b.title));
-  if (sort === "domain") list = [...list].sort((a, b) => domainOf(a.url).localeCompare(domainOf(b.url)));
+  list = [...list].sort(byTitle);
+  if (sort === "za") list.reverse();
+  if (sort === "new") list.sort((a, b) => b.created - a.created);
+  if (sort === "domain") list.sort((a, b) => byName(domainOf(a.url), domainOf(b.url)) || byTitle(a, b));
 
-  const label = currentCat === ALL ? "All links" : currentCat;
+  const label = currentCat === ALL ? "All links" : currentCat === FAV ? "★ Favorites" : currentCat;
   const filt = [q && `“${q}”`, ...[...selectedTags].map(t => "#" + t)].filter(Boolean).join(" ");
   $("heading").textContent = `${label}${filt ? " · " + filt : ""} — ${list.length}`;
 
-  $("grid").replaceChildren(...list.map(tile));
+  $("grid").className = "grid" + (view === "list" ? " list" : "");
+  $("grid").replaceChildren(...list.map(view === "list" ? listRow : tile));
+  $("grid").hidden = list.length === 0;
+  for (const b of document.querySelectorAll(".seg [data-view]")) b.classList.toggle("on", b.dataset.view === view);
   const empty = $("empty");
   empty.hidden = list.length > 0;
-  empty.textContent = data.links.length
-    ? "Nothing matches these filters."
-    : "No favorites yet. Click “+ Add link”, use the toolbar button, or right-click any page → Save to My Favorite Links.";
+  empty.textContent =
+    !data.links.length ? "No links yet. Click “+ Add link”, use the toolbar button, or right-click any page → Save to My Favorite Links."
+    : currentCat === FAV && !q && !selectedTags.size ? "No favorites yet. Click the ☆ on any link to add it here."
+    : "Nothing matches these filters.";
 }
 
 function tile(l) {
@@ -113,8 +146,39 @@ function tile(l) {
     el("div", { class: "t-tags" }, l.tags.map(t =>
       el("button", { class: "chip" + (selectedTags.has(t) ? " on" : ""), onclick: () => toggleTag(t) }, "#" + t)
     )),
+    starButton(l),
     el("button", { class: "t-edit", title: "Edit", onclick: () => openEditDialog(l) }, "✎")
   );
+  return makeDraggable(node, l);
+}
+
+function listRow(l) {
+  const node = el("div", { class: "lrow", draggable: "true", dataset: { id: l.id } },
+    el("img", { class: "fav", src: faviconUrl(l.url, 32), alt: "" }),
+    el("a", { class: "r-title", href: l.url, title: l.url }, l.title),
+    el("span", { class: "r-domain", title: l.url }, domainOf(l.url)),
+    el("span", { class: "r-folder" }, l.category),
+    el("div", { class: "r-tags" }, l.tags.map(t =>
+      el("button", { class: "chip" + (selectedTags.has(t) ? " on" : ""), onclick: () => toggleTag(t) }, "#" + t)
+    )),
+    el("div", { class: "r-actions" },
+      starButton(l),
+      el("button", { class: "r-edit", title: "Edit", onclick: () => openEditDialog(l) }, "✎")
+    )
+  );
+  return makeDraggable(node, l);
+}
+
+function starButton(l) {
+  return el("button", {
+    class: "star-btn" + (l.fav ? " on" : ""),
+    title: l.fav ? "Remove from Favorites" : "Add to Favorites",
+    "aria-pressed": l.fav ? "true" : "false",
+    onclick: e => { e.preventDefault(); e.stopPropagation(); l.fav = !l.fav; persist(); }
+  }, l.fav ? "★" : "☆");
+}
+
+function makeDraggable(node, l) {
   node.addEventListener("dragstart", e => {
     e.dataTransfer.setData("text/x-fav-id", l.id);
     e.dataTransfer.effectAllowed = "move";
@@ -122,6 +186,20 @@ function tile(l) {
   });
   node.addEventListener("dragend", () => node.classList.remove("dragging"));
   return node;
+}
+
+// Dropping a link on "Favorites" stars it (it stays in its folder).
+function addFavDropTarget(row) {
+  row.addEventListener("dragover", e => {
+    if (e.dataTransfer.types.includes("text/x-fav-id")) { e.preventDefault(); row.classList.add("drop"); }
+  });
+  row.addEventListener("dragleave", () => row.classList.remove("drop"));
+  row.addEventListener("drop", e => {
+    e.preventDefault();
+    row.classList.remove("drop");
+    const link = data.links.find(l => l.id === e.dataTransfer.getData("text/x-fav-id"));
+    if (link && !link.fav) { link.fav = true; persist(); }
+  });
 }
 
 function addDropTarget(row, cat) {
@@ -143,9 +221,12 @@ function openEditDialog(link) {
   $("editTitle").textContent = link ? "Edit link" : "Add link";
   $("eTitle").value = link?.title ?? "";
   $("eUrl").value = link?.url ?? "https://";
-  setupFolderPicker($("eCategory"), $("eNewFolder"), data.categories,
-    link?.category ?? (currentCat === ALL ? data.categories[0] : currentCat));
+  const folders = [...data.categories].sort(byName);
+  const defaultFolder = data.categories.includes(currentCat) ? currentCat
+    : (folders.includes(DEFAULT_CATEGORY) ? DEFAULT_CATEGORY : folders[0]);
+  setupFolderPicker($("eCategory"), $("eNewFolder"), folders, link?.category ?? defaultFolder);
   $("eTags").value = link?.tags.join(", ") ?? "";
+  $("eFav").checked = link ? !!link.fav : currentCat === FAV;
   $("eDelete").hidden = !link;
   $("editDlg").showModal();
   (link ? $("eTitle") : $("eUrl")).focus();
@@ -162,7 +243,8 @@ $("editForm").addEventListener("submit", e => {
     url,
     title: $("eTitle").value.trim() || domainOf(url),
     category: ensureCategory(data, readFolderPicker($("eCategory"), $("eNewFolder"))),
-    tags: parseTags($("eTags").value)
+    tags: parseTags($("eTags").value),
+    fav: $("eFav").checked
   };
   if (editing) Object.assign(editing, fields);
   else data.links.unshift(newLink(fields));
@@ -239,7 +321,11 @@ $("addCatForm").addEventListener("submit", e => {
 
 $("addLink").addEventListener("click", () => openEditDialog(null));
 $("search").addEventListener("input", renderGrid);
-$("sort").addEventListener("change", renderGrid);
+$("sort").value = pref.get("sort", "az");
+$("sort").addEventListener("change", () => { pref.set("sort", $("sort").value); renderGrid(); });
+for (const b of document.querySelectorAll(".seg [data-view]")) {
+  b.addEventListener("click", () => { view = b.dataset.view; pref.set("view", view); renderGrid(); });
+}
 
 document.addEventListener("keydown", e => {
   if (e.key === "/" && !e.target.closest("input, textarea, dialog")) {
@@ -254,7 +340,7 @@ document.addEventListener("keydown", e => {
 
 // ---------- backup: export / import ----------
 $("exportBtn").addEventListener("click", async () => {
-  const { links = [], categories = [] } = await chrome.storage.local.get(["links", "categories"]);
+  const { links, categories } = await loadData();
   const backup = {
     app: "my-favorite-links",
     version: chrome.runtime.getManifest().version,
@@ -288,7 +374,8 @@ $("importFile").addEventListener("change", async e => {
         title: l.title || domainOf(l.url),
         category: ensureCategory(data, l.category),
         tags: Array.isArray(l.tags) ? l.tags : [],
-        created: l.created || Date.now()
+        created: l.created || Date.now(),
+        fav: !!l.fav
       };
       data.links.push(link); ids.add(link.id); urls.add(link.url); added++;
     }

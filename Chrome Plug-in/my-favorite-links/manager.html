@@ -17,11 +17,12 @@
       <button class="btn small" type="submit">Add</button>
     </form>
     <div class="backup">
-      <button id="exportBtn" class="btn small" type="button">⬇ Export backup</button>
-      <button id="importBtn" class="btn small" type="button">⬆ Import backup</button>
+      <button id="exportBtn" class="btn small" type="button" title="Save all links to a backup file">⬇ Export</button>
+      <button id="importBtn" class="btn small" type="button" title="Add links from a backup file">⬆ Import</button>
       <input id="importFile" type="file" accept=".json,application/json" hidden>
       <p id="backupStatus" class="tip"></p>
     </div>
+    <p id="syncInfo" class="tip"></p>
     <p class="tip">Tip: drag a tile onto a folder to move it.</p>
     <a class="about-link" href="about.html">ⓘ About &amp; support</a>
   </aside>
@@ -30,10 +31,15 @@
     <div class="toolbar">
       <input id="search" type="search" placeholder="Search title, URL, tag…   ( / )">
       <select id="sort" class="btn" title="Sort">
-        <option value="new">Newest</option>
         <option value="az">A → Z</option>
+        <option value="za">Z → A</option>
+        <option value="new">Newest</option>
         <option value="domain">Domain</option>
       </select>
+      <div class="seg" role="group" aria-label="View">
+        <button type="button" id="viewCards" data-view="cards" title="Card view">▦ Cards</button>
+        <button type="button" id="viewList" data-view="list" title="List view">☰ List</button>
+      </div>
       <button id="addLink" class="btn primary">+ Add link</button>
     </div>
     <div id="tagBar" class="tagbar"></div>
@@ -53,6 +59,7 @@
         <input id="eNewFolder" class="new-folder" placeholder="New folder name" hidden>
       </label>
       <label>Tags <span class="hint">(comma separated)</span> <input id="eTags"></label>
+      <label class="check"><input type="checkbox" id="eFav"> ★ Add to Favorites</label>
       <div class="row dlg-actions">
         <button type="button" id="eDelete" class="btn danger">Delete</button>
         <span class="spacer"></span>
